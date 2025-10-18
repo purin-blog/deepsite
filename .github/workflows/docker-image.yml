@@ -1,0 +1,39 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 构建 Docker 镜像
+        run: docker build . -f Dockerfile -t deepsite:latest
+
+      - name: 保存镜像成 tar 文件
+        run: docker save deepsite:latest -o deepsite.tar
+
+      - name: 压缩镜像文件
+        run: gzip deepsite.tar
+
+      - name: 上传镜像到 Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deepsite-image
+          path: deepsite.tar.gz
+
+      - name: 上传到 Release (仅在 release 时触发)
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: deepsite.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
