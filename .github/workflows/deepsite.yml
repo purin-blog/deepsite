@@ -7,12 +7,21 @@ on:
     branches: [ "main" ]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag deepsite:$(date +%s)
+      - uses: actions/checkout@v4
+
+      - name: 构建 Docker 镜像
+        run: docker build . -f Dockerfile -t deepsite:latest
+
+      - name: 保存镜像成 tar 文件
+        run: docker save deepsite:latest -o deepsite.tar
+
+      - name: 上传镜像到 Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: deepsite
+          path: deepsite.tar
+
